@@ -47,7 +47,7 @@ class SwinTransformerBlock(nn.Module):
         x = x + self.mlp(self.norm2(x))
         return x
 
-class Swin2SR(nn.Module):
+class CViT(nn.Module):
     def __init__(self, img_size=60, patch_size=6, in_channels=3, embed_dim=768, depth=12, num_heads=12, scale_factor=2):
         super().__init__()
         self.scale_factor = scale_factor
@@ -147,7 +147,6 @@ def filter_120x120_images(datasetPath):
     return imagePaths
 
 def calculate_psnr(sr_img, hr_img):
-    # PSNR calculation (using skimage for precision)
     sr_img_np = sr_img.cpu().detach().numpy()
     hr_img_np = hr_img.cpu().detach().numpy()
     psnr_value = peak_signal_noise_ratio(hr_img_np, sr_img_np, data_range=1.0)
@@ -211,7 +210,6 @@ def super_resolve_images(dataloader, output_dir, vit_model, device):
             sr_images = vit_model(lr_tensor)
 
             for i in range(lr_tensor.shape[0]):
-                # Convert and process images
                 lr_img = lr_tensor[i].permute(1, 2, 0).cpu().numpy()
                 sr_img = sr_images[i].permute(1, 2, 0).cpu().detach().numpy()
 
@@ -227,14 +225,10 @@ def super_resolve_images(dataloader, output_dir, vit_model, device):
                 plt.imshow(sr_img)
                 plt.title(f"Super-Resolved: {sr_img.shape[:2]}")
 
-                # Get the current path
                 current_path = paths[i] if isinstance(paths[i], str) else paths[i][0]
                 
-                # Extract base filename while preserving numbers
                 base_name = os.path.splitext(os.path.basename(current_path))[0]
-                # base_name will be like 'S2A_MSIL2A_20170613T101031_N9999_R022_T33UUP_40_65'
-                
-                # Save with original numbers intact
+
                 lr_save_path = os.path.join(output_dir, f"{base_name}_LR.png")
                 sr_save_path = os.path.join(output_dir, f"{base_name}_SR.png")
 
